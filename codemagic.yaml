@@ -1,0 +1,197 @@
+workflows:
+  main:
+    name: main
+    max_build_duration: 105
+    integrations:
+      app_store_connect: CodemagicConnect
+    environment:
+      android_signing:
+        - android_keystore_reference
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.submee
+      groups:
+        - main
+        - app_store_credentials
+      java: 17
+      flutter: 3.27.2
+      xcode: 16
+      cocoapods: 1.16.2
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: "*"
+          include: true
+          source: true
+      cancel_previous_builds: true
+    scripts:
+      - name: Set up local properties
+        ignore_failure: false
+        script: |
+          echo "flutter.sdk=$HOME/programs/flutter" > "$CM_BUILD_DIR/android/local.properties"
+      - name: Load Environment variables
+        ignore_failure: false
+        script: |
+            mkdir -p assets/environment
+            echo "API_BASE_URL=$API_BASE_URL" > assets/environment/local.env
+            echo "GOOGLE_CLIENT_ID_SIGN_IN=$GOOGLE_CLIENT_ID_SIGN_IN" >> assets/environment/local.env
+            echo "ENVIRONMENT=production" >> assets/environment/local.env
+            echo "VERSION_API_KEY=$VERSION_API_KEY" >> assets/environment/local.env
+            echo -n $GOOGLE_SERVICE_ANDROID | base64 --decode > android/app/google-services.json
+            echo -n $GOOGLE_SERVICE_IOS | base64 --decode > ios/Runner/GoogleService-Info.plist
+      - name: Prepare Flutter
+        ignore_failure: false
+        script: |
+          flutter pub get
+          flutter pub run intl_utils:generate
+      - name: Build Android
+        ignore_failure: false
+        script: |
+          PROD=$(($(google-play get-latest-build-number --package-name "com.submee" --tracks="production") + 1))
+          ALPHA=$(($(google-play get-latest-build-number --package-name "com.submee" --tracks="alpha") + 1))
+          INTERNAL=$(($(google-play get-latest-build-number --package-name "com.submee" --tracks="internal") + 1))
+          if [ "$PROD" -gt "$ALPHA" ] && [ "$PROD" -gt "$INTERNAL" ]; then
+              BUILD_NUMBER="$PROD"
+          elif [ "$ALPHA" -gt "$PROD" ] && [ "$ALPHA" -gt "$INTERNAL" ]; then
+              BUILD_NUMBER="$ALPHA"
+          else
+              BUILD_NUMBER="$INTERNAL"
+          fi
+          echo "Build number: $BUILD_NUMBER"
+          flutter build appbundle --release \
+          --build-number=$BUILD_NUMBER
+      - name: Install Pods
+        working_directory: ./ios
+        ignore_failure: false
+        script: |
+          pod install --repo-update
+      - name: Set up keychain to be used for code signing
+        ignore_failure: false
+        script: |
+          keychain initialize
+      - name: Set up signing certificate
+        ignore_failure: false
+        script: |
+          keychain add-certificates
+      - name: Set up code signing settings on Xcode project
+        ignore_failure: false
+        script: |
+          xcode-project use-profiles
+      - name: Build IOS
+        ignore_failure: false
+        script: |
+          BUILD_NUMBER=$(($(app-store-connect get-latest-testflight-build-number $APP_APPLE_ID) + 1))
+          echo "Build number: $BUILD_NUMBER"
+          find . -name "Podfile" -execdir pod install \;
+          flutter build ipa --release \
+          --build-number=$BUILD_NUMBER \
+          --export-options-plist=/Users/builder/export_options.plist
+      - name: Update App Version
+        ignore_failure: false
+        script: |
+          PROD=$(($(google-play get-latest-build-number --package-name "com.submee" --tracks="production") + 1))
+          ALPHA=$(($(google-play get-latest-build-number --package-name "com.submee" --tracks="alpha") + 1))
+          INTERNAL=$(($(google-play get-latest-build-number --package-name "com.submee" --tracks="internal") + 1))
+          if [ "$PROD" -gt "$ALPHA" ] && [ "$PROD" -gt "$INTERNAL" ]; then
+              ANDROID_BUILD_NUMBER="$PROD"
+          elif [ "$ALPHA" -gt "$PROD" ] && [ "$ALPHA" -gt "$INTERNAL" ]; then
+              ANDROID_BUILD_NUMBER="$ALPHA"
+          else
+              ANDROID_BUILD_NUMBER="$INTERNAL"
+          fi
+          IOS_BUILD_NUMBER=$(($(app-store-connect get-latest-testflight-build-number $APP_APPLE_ID) + 1))
+          echo "Updating version"
+          API_BASE_URL=$API_BASE_URL IOS_BUILD_NUMBER=$IOS_BUILD_NUMBER ANDROID_BUILD_NUMBER=$ANDROID_BUILD_NUMBER ENVIRONMENT="production" REQUIRED_UPDATE=true API_KEY=$VERSION_API_KEY ./scripts/update_app_version.sh
+    artifacts:
+      - build/**/outputs/apk/**/*.apk
+      - build/**/outputs/bundle/**/*.aab
+      - build/**/outputs/**/mapping.txt
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - "*.snap"
+      - flutter_drive.log
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
+    publishing:
+      google_play:
+        credentials: $GOOGLE_PLAY_SERVICE_ACCOUNT_CREDENTIALS
+        track: internal
+        submit_as_draft: true
+        in_app_update_priority: 0
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        submit_to_app_store: false
+        beta_groups:
+          - External
+      scripts:
+        - name: Upload debug symbols to Firebase Crashlytics
+          script: |
+            echo "Find build artifacts"
+            dsymPath=$(find $CM_BUILD_DIR/build/ios/archive/Runner.xcarchive -name "*.dSYM" | head -1)
+            if [[ -z ${dsymPath} ]]
+            then
+              echo "No debug symbols were found, skip publishing to Firebase Crashlytics"
+            else
+              echo "Publishing debug symbols from $dsymPath to Firebase Crashlytics"
+              ls -d -- ios/Pods/*
+              $CM_BUILD_DIR/ios/Pods/FirebaseCrashlytics/upload-symbols \
+                -gsp ios/Runner/GoogleService-Info.plist -p ios $dsymPath
+            fi
+  android:
+    name: android
+    max_build_duration: 105
+    environment:
+      android_signing:
+        - android_keystore_reference
+      groups:
+        - main
+      java: 17
+      flutter: 3.27.2
+    scripts:
+      - name: Set up local properties
+        ignore_failure: false
+        script: |
+          echo "flutter.sdk=$HOME/programs/flutter" > "$CM_BUILD_DIR/android/local.properties"
+      - name: Load Environment variables
+        ignore_failure: false
+        script: |
+            mkdir -p assets/environment
+            echo "API_BASE_URL=$API_BASE_URL" > assets/environment/local.env
+            echo "GOOGLE_CLIENT_ID_SIGN_IN=$GOOGLE_CLIENT_ID_SIGN_IN" >> assets/environment/local.env
+            echo "ENVIRONMENT=production" >> assets/environment/local.env
+            echo "VERSION_API_KEY=$VERSION_API_KEY" >> assets/environment/local.env
+            echo -n $GOOGLE_SERVICE_ANDROID | base64 --decode > android/app/google-services.json
+      - name: Prepare Flutter
+        ignore_failure: false
+        script: |
+          flutter pub get
+          flutter pub run intl_utils:generate
+      - name: Build Android
+        ignore_failure: false
+        script: |
+          PROD=$(($(google-play get-latest-build-number --package-name "com.submee" --tracks="production") + 1))
+          ALPHA=$(($(google-play get-latest-build-number --package-name "com.submee" --tracks="alpha") + 1))
+          INTERNAL=$(($(google-play get-latest-build-number --package-name "com.submee" --tracks="internal") + 1))
+          if [ "$PROD" -gt "$ALPHA" ] && [ "$PROD" -gt "$INTERNAL" ]; then
+              BUILD_NUMBER="$PROD"
+          elif [ "$ALPHA" -gt "$PROD" ] && [ "$ALPHA" -gt "$INTERNAL" ]; then
+              BUILD_NUMBER="$ALPHA"
+          else
+              BUILD_NUMBER="$INTERNAL"
+          fi
+          echo "Build number: $BUILD_NUMBER"
+          flutter build appbundle --release \
+          --build-number=$BUILD_NUMBER
+    artifacts:
+      - build/**/outputs/apk/**/*.apk
+      - build/**/outputs/bundle/**/*.aab
+      - build/**/outputs/**/mapping.txt
+      - "*.snap"
+      - flutter_drive.log
+    publishing:
+      google_play:
+        credentials: $GOOGLE_PLAY_SERVICE_ACCOUNT_CREDENTIALS
+        track: internal
+        submit_as_draft: true
+        in_app_update_priority: 0

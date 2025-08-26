@@ -1,0 +1,16 @@
+{
+  "configurations": [
+    {
+      "name": "Launch Submee",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main.dart"
+    },
+    {
+      "name": "Sandbox",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main_sandbox.dart"
+    }
+  ]
+}

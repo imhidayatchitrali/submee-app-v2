@@ -1,0 +1,50 @@
+{
+    "files.exclude": {
+      "lib/generated/": true,
+      "lib/generated_plugin_registrant.dart": true,
+      ".flutter-plugins": true,
+      ".flutter-plugins-dependencies": true,
+      ".metadata": true,
+      "pubspec.lock": true,
+      ".packages": true,
+      "luna.iml": true,
+      ".dart_tool": true,
+      ".idea": true
+    },
+    "versionlens.suggestions.showOnStartup": true,
+    "editor.tabSize": 2,
+    "explorer.confirmDragAndDrop": false,
+    "javascript.updateImportsOnFileMove.enabled": "always",
+    "typescript.updateImportsOnFileMove.enabled": "always",
+    "[dart]": {
+        "editor.formatOnSave": true,
+        "editor.formatOnType": true,
+        "editor.rulers": [80],
+        "editor.selectionHighlight": false,
+        "editor.suggest.snippetsPreventQuickSuggestions": false,
+        "editor.suggestSelection": "first",
+        "editor.tabCompletion": "onlySnippets",
+        "editor.wordBasedSuggestions": "off"
+    },
+    "dart.flutterCustomEmulators": [],
+    "dart.debugSdkLibraries": false,
+    "files.autoSave": "off",
+    "dart.openDevTools": "flutter",
+    "dart.showInspectorNotificationsForWidgetErrors": false,
+    "editor.formatOnPaste": true,
+    "diffEditor.codeLens": true,
+    "files.trimFinalNewlines": true,
+    "files.trimTrailingWhitespace": true,
+    "workbench.editor.closeOnFileDelete": true,
+    "search.searchEditor.defaultNumberOfContextLines": 2,
+    "debug.focusWindowOnBreak": false,
+    "dart.devToolsBrowser": "default",
+    "dart.flutterAdbConnectOnChromeOs": true,
+    "dart.flutterOutline": false,
+    "dart.flutterDaemonLogFile": "flutterDaemon.txt",
+    "editor.codeActionsOnSave": {
+      "source.fixAll": "always",
+        "source.organizeImports": "always"
+    },
+    "dart.lineLength": 99
+  }

@@ -1,0 +1,10 @@
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="tabler:photo-plus">
+<rect width="23" height="23" transform="translate(0.5 0.5)" fill="white"/>
+<g id="Group">
+<path id="Vector" d="M14.875 8.16667H14.8846M12.4792 20.625H6.25C5.4875 20.625 4.75624 20.3221 4.21707 19.7829C3.6779 19.2438 3.375 18.5125 3.375 17.75V6.25C3.375 5.4875 3.6779 4.75624 4.21707 4.21707C4.75624 3.6779 5.4875 3.375 6.25 3.375H17.75C18.5125 3.375 19.2438 3.6779 19.7829 4.21707C20.3221 4.75624 20.625 5.4875 20.625 6.25V12.4792" stroke="#949494" stroke-width="1.91667" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Vector_2" d="M3.375 15.8334L8.16667 11.0417C9.056 10.186 10.1523 10.186 11.0417 11.0417L14.875 14.8751" stroke="#949494" stroke-width="1.91667" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Vector_3" d="M13.9166 13.9167L14.875 12.9584C15.517 12.3412 16.2645 12.1687 16.966 12.4409M15.8333 18.7084H21.5833M18.7083 15.8334V21.5834" stroke="#949494" stroke-width="1.91667" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+</g>
+</svg>
