@@ -37,6 +37,8 @@
 	<string>We need access to camera to take profile photo</string>
 	<key>NSLocationAlwaysUsageDescription</key>
 	<string>This app requires access to your location for property listing.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>This app requires access to your location for property listing.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>This app requires access to your location for property listing.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
