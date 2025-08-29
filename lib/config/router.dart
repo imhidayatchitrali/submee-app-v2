@@ -283,7 +283,8 @@ class AppRouter {
         case AuthStatus.authenticated:
           // Block host home page for users who are not hosts (no properties)
           if (Preferences.isHost && !userIsHost && state.matchedLocation == '/host-home') {
-            return '/publish-page';
+            // return '/publish-page';
+            return '/host-home';
           }
           if (authenticatedRoutes.contains(state.matchedLocation.split('/')[1])) {
             return null;

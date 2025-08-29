@@ -203,6 +203,7 @@ class DioClient {
   }
 
   // Error handling (unchanged)
+  // Update the _handleError method
   Exception _handleError(DioException error) {
     final Exception exception;
 
@@ -211,6 +212,14 @@ class DioClient {
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
         exception = TimeoutException('Connection timeout', 'connection_timeout');
+        break;
+
+      // ADD THIS CASE FOR CONNECTION ERRORS
+      case DioExceptionType.connectionError:
+        exception = NoInternetException(
+          'Network is unreachable. Please check your connection.',
+          'network_unreachable',
+        );
         break;
 
       case DioExceptionType.badResponse:
@@ -254,6 +263,8 @@ class DioClient {
       case DioExceptionType.unknown:
         if (error.error is SocketException) {
           exception = NoInternetException('No internet connection', 'no_internet');
+        } else if (error.message?.contains('Network is unreachable') == true) {
+          exception = NoInternetException('Network is unreachable', 'network_unreachable');
         } else {
           exception = UnknownException(error.message ?? 'Unknown error', 'unknown');
         }
